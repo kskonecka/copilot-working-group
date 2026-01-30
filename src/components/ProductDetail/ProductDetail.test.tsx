@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { ProductDetail } from './index';
 import { renderWithQueryClient } from '../../test/test-utils';
 import { useProduct } from '../../hooks/useProduct';
-import { Product } from '../../types/product';
+import type { Product } from '../../types/product';
+import type { UseQueryResult } from '@tanstack/react-query';
 
 // Mock all child components
 vi.mock('../ProductNavigation', () => ({
@@ -55,7 +56,7 @@ describe('ProductDetail', () => {
       error: null,
       isError: false,
       isSuccess: true,
-    } as any);
+    } as UseQueryResult<Product, Error>);
   });
 
   it('renders without crashing', () => {
@@ -100,7 +101,7 @@ describe('ProductDetail', () => {
   });
 
   it('renders product navigation outside of product section', () => {
-    const { container } = renderWithQueryClient(<ProductDetail />);
+    renderWithQueryClient(<ProductDetail />);
 
     // Navigation should be a direct child of container - CSS modules add hashed class names
     const navigation = screen.getByTestId('product-navigation');
@@ -159,7 +160,7 @@ describe('ProductDetail', () => {
       error: null,
       isError: false,
       isSuccess: false,
-    } as any);
+    } as UseQueryResult<Product, Error>);
 
     renderWithQueryClient(<ProductDetail />);
 
@@ -175,7 +176,7 @@ describe('ProductDetail', () => {
       error: new Error('Failed to load product'),
       isError: true,
       isSuccess: false,
-    } as any);
+    } as UseQueryResult<Product, Error>);
 
     renderWithQueryClient(<ProductDetail />);
 
