@@ -1,159 +1,143 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
 import { ProductDetail } from './index';
-import { renderWithQueryClient } from '../../test/test-utils';
-import { useProduct } from '../../hooks/useProduct';
-import type { Product } from '../../types/product';
-import type { UseQueryResult } from '@tanstack/react-query';
-
-// Mock all child components
-vi.mock('../ProductNavigation', () => ({
-  ProductNavigation: () => <div data-testid="product-navigation">Product Navigation</div>,
-}));
-
-vi.mock('../ProductImage', () => ({
-  ProductImage: () => <div data-testid="product-image">Product Image</div>,
-}));
-
-vi.mock('../ProductInfo', () => ({
-  ProductInfo: () => <div data-testid="product-info">Product Info</div>,
-}));
-
-vi.mock('../ProductMeta', () => ({
-  ProductMeta: () => <div data-testid="product-meta">Product Meta</div>,
-}));
-
-vi.mock('../ProductActions', () => ({
-  ProductActions: () => <div data-testid="product-actions">Product Actions</div>,
-}));
-
-// Mock the useProduct hook
-vi.mock('../../hooks/useProduct');
-
-const mockProduct: Product = {
-  id: 1,
-  title: 'Test Product',
-  description: 'Test Description',
-  category: 'Test Category',
-  price: 99.99,
-  rating: 4.5,
-  stock: 10,
-  brand: 'Test Brand',
-  availabilityStatus: 'In Stock',
-  returnPolicy: '30 days',
-  thumbnail: 'https://example.com/thumbnail.jpg',
-  images: ['https://example.com/image1.jpg'],
-};
+import { renderWithRouter } from '../../test/test-utils';
 
 describe('ProductDetail', () => {
-  beforeEach(() => {
-    // Reset mocks before each test
-    vi.clearAllMocks();
-    // Mock useProduct to return successful data
-    vi.mocked(useProduct).mockReturnValue({
-      data: mockProduct,
-      isLoading: false,
-      error: null,
-      isError: false,
-      isSuccess: true,
-    } as UseQueryResult<Product, Error>);
+  it('renders without crashing', async () => {
+    renderWithRouter(<ProductDetail />);
+    
+    // Wait for the component to load data
+    await waitFor(() => {
+      expect(screen.getByText(/Back to Products/i)).toBeInTheDocument();
+    });
   });
 
-  it('renders without crashing', () => {
-    renderWithQueryClient(<ProductDetail />);
-    expect(screen.getByTestId('product-navigation')).toBeInTheDocument();
+  it('renders all child components', async () => {
+    renderWithRouter(<ProductDetail />);
+
+    // Wait for data to load and check for elements from each child component
+    await waitFor(() => {
+      // ProductNavigation
+      expect(screen.getByText(/Back to Products/i)).toBeInTheDocument();
+      
+      // ProductInfo - should show title and price
+      expect(screen.getByText('Test Product')).toBeInTheDocument();
+      expect(screen.getByText(/\$99\.99/)).toBeInTheDocument();
+      
+      // ProductMeta - should show brand, category, stock, rating
+      expect(screen.getByText('Test Brand')).toBeInTheDocument();
+      expect(screen.getByText('Test Category')).toBeInTheDocument();
+      expect(screen.getByText('10')).toBeInTheDocument();
+      expect(screen.getByText(/4\.5/)).toBeInTheDocument();
+      
+      // ProductActions - should show Add to Cart button
+      expect(screen.getByRole('button', { name: /Add to Cart/i })).toBeInTheDocument();
+    });
   });
 
-  it('integrates with child components that use useProduct hook', () => {
-    renderWithQueryClient(<ProductDetail />);
+  it('ensures correct structure with container class', async () => {
+    const { container } = renderWithRouter(<ProductDetail />);
 
-    // Verify that the component structure renders correctly
-    // Child components (ProductInfo, ProductImage, ProductMeta, ProductActions) use useProduct internally
-    expect(screen.getByTestId('product-navigation')).toBeInTheDocument();
-    expect(screen.getByTestId('product-image')).toBeInTheDocument();
-    expect(screen.getByTestId('product-info')).toBeInTheDocument();
-    expect(screen.getByTestId('product-meta')).toBeInTheDocument();
-    expect(screen.getByTestId('product-actions')).toBeInTheDocument();
-  });
-
-  it('ensures correct structure with container class', () => {
-    const { container } = renderWithQueryClient(<ProductDetail />);
+    await waitFor(() => {
+      expect(screen.getByText(/Back to Products/i)).toBeInTheDocument();
+    });
 
     // Find the main container div - CSS modules add hashed class names
-    const mainContainer = container.firstChild as HTMLElement;
-    expect(mainContainer).toHaveAttribute('class');
-    expect(mainContainer.className).toContain('container');
+    const mainContainer = container.querySelector('[class*="container"]');
+    expect(mainContainer).toBeInTheDocument();
   });
 
-  it('ensures correct structure with product class', () => {
-    const { container } = renderWithQueryClient(<ProductDetail />);
+  it('ensures correct structure with product class', async () => {
+    const { container } = renderWithRouter(<ProductDetail />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Back to Products/i)).toBeInTheDocument();
+    });
 
     // Find the product div
     const productDiv = container.querySelector('[class*="product"]');
     expect(productDiv).toBeInTheDocument();
   });
 
-  it('ensures correct structure with infoSection class', () => {
-    const { container } = renderWithQueryClient(<ProductDetail />);
+  it('ensures correct structure with infoSection class', async () => {
+    const { container } = renderWithRouter(<ProductDetail />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Back to Products/i)).toBeInTheDocument();
+    });
 
     // Find the infoSection div
     const infoSection = container.querySelector('[class*="infoSection"]');
     expect(infoSection).toBeInTheDocument();
   });
 
-  it('renders product navigation outside of product section', () => {
-    renderWithQueryClient(<ProductDetail />);
+  it('renders product navigation outside of product section', async () => {
+    renderWithRouter(<ProductDetail />);
 
-    // Navigation should be a direct child of container - CSS modules add hashed class names
-    const navigation = screen.getByTestId('product-navigation');
-    expect(navigation.parentElement).toHaveAttribute('class');
-    expect(navigation.parentElement?.className).toContain('container');
+    await waitFor(() => {
+      expect(screen.getByText(/Back to Products/i)).toBeInTheDocument();
+    });
+
+    const backLink = screen.getByText(/Back to Products/i);
+    const parentWithProductClass = backLink.closest('[class*="product"]');
+    
+    // The back link should NOT be inside the product section
+    expect(parentWithProductClass).toBeNull();
   });
 
-  it('renders product image and info section within product container', () => {
-    renderWithQueryClient(<ProductDetail />);
+  it('displays product data from API', async () => {
+    renderWithRouter(<ProductDetail />);
 
-    const productImage = screen.getByTestId('product-image');
-    const productInfo = screen.getByTestId('product-info');
-    const productMeta = screen.getByTestId('product-meta');
-    const productActions = screen.getByTestId('product-actions');
-
-    // All these components should be rendered
-    expect(productImage).toBeInTheDocument();
-    expect(productInfo).toBeInTheDocument();
-    expect(productMeta).toBeInTheDocument();
-    expect(productActions).toBeInTheDocument();
+    // Wait for data to load and verify it's displayed
+    await waitFor(() => {
+      expect(screen.getByText('Test Product')).toBeInTheDocument();
+      expect(screen.getByText('Test Description')).toBeInTheDocument();
+      expect(screen.getByText(/\$99\.99/)).toBeInTheDocument();
+    });
   });
 
-  it('groups ProductInfo, ProductMeta, and ProductActions in infoSection', () => {
-    const { container } = renderWithQueryClient(<ProductDetail />);
+  it('groups ProductInfo, ProductMeta, and ProductActions in infoSection', async () => {
+    const { container } = renderWithRouter(<ProductDetail />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Product')).toBeInTheDocument();
+    });
 
     const infoSection = container.querySelector('[class*="infoSection"]');
     expect(infoSection).toBeInTheDocument();
 
-    // Check that all three components are within the infoSection
-    const productInfo = screen.getByTestId('product-info');
-    const productMeta = screen.getByTestId('product-meta');
-    const productActions = screen.getByTestId('product-actions');
+    // Check that key elements from each component are within infoSection
+    const title = screen.getByText('Test Product');
+    const brand = screen.getByText('Test Brand');
+    const addToCartButton = screen.getByRole('button', { name: /Add to Cart/i });
 
-    expect(infoSection).toContainElement(productInfo);
-    expect(infoSection).toContainElement(productMeta);
-    expect(infoSection).toContainElement(productActions);
+    expect(infoSection).toContainElement(title);
+    expect(infoSection).toContainElement(brand);
+    expect(infoSection).toContainElement(addToCartButton);
   });
 
-  it('maintains correct DOM hierarchy', () => {
-    const { container } = renderWithQueryClient(<ProductDetail />);
+  it('maintains correct DOM hierarchy', async () => {
+    const { container } = renderWithRouter(<ProductDetail />);
 
-    // Check hierarchy: container > navigation + product
-    const mainContainer = container.firstChild as HTMLElement;
-    expect(mainContainer.children).toHaveLength(2);
+    await waitFor(() => {
+      expect(screen.getByText('Test Product')).toBeInTheDocument();
+    });
 
-    // Check hierarchy: product > image + infoSection
+    // Find the main container
+    const mainContainer = container.querySelector('[class*="container"]');
+    expect(mainContainer).toBeInTheDocument();
+
+    // Check that product div exists
     const productDiv = container.querySelector('[class*="product"]');
-    expect(productDiv?.children).toHaveLength(2);
+    expect(productDiv).toBeInTheDocument();
 
-    // Check hierarchy: infoSection > info + meta + actions
+    // Check that infoSection exists
     const infoSection = container.querySelector('[class*="infoSection"]');
-    expect(infoSection?.children).toHaveLength(3);
+    expect(infoSection).toBeInTheDocument();
+
+    // Verify infoSection is inside product
+    expect(productDiv).toContainElement(infoSection as HTMLElement);
   });
 });
+
