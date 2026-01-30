@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Suspense } from 'react';
+import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { useProducts } from '../hooks/useProducts';
 import { Layout } from '../components/ui/Layout';
 import { Header } from '../components/Header';
@@ -28,11 +29,15 @@ const IndexPage = () => {
       <Layout.Main>
         <h1>Featured Products</h1>
 
-        <ErrorBoundary>
-          <Suspense fallback={<p>Loading products...</p>}>
-            <ProductsContent />
-          </Suspense>
-        </ErrorBoundary>
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset}>
+              <Suspense fallback={<p>Loading products...</p>}>
+                <ProductsContent />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </Layout.Main>
     </Layout>
   );

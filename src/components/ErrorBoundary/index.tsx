@@ -4,6 +4,7 @@ import styles from './ErrorBoundary.module.css';
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: (error: Error, resetError: () => void) => ReactNode;
+  onReset?: () => void;
 }
 
 interface ErrorBoundaryState {
@@ -22,6 +23,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   resetError = () => {
+    this.props.onReset?.();
     this.setState({ hasError: false, error: null });
   };
 
@@ -32,13 +34,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className={styles.errorContainer}>
+        <div className={styles.errorContainer} role="alert" aria-live="assertive">
           <div className={styles.errorContent}>
             <h2 className={styles.errorTitle}>Something went wrong</h2>
             <p className={styles.errorMessage}>{this.state.error.message}</p>
             <button 
               onClick={this.resetError}
               className={styles.errorButton}
+              aria-label="Retry loading content"
             >
               Try again
             </button>

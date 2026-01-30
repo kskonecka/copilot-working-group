@@ -1,5 +1,6 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import { Suspense } from 'react';
+import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { useProduct } from '../../hooks/useProduct';
 import { Layout } from '../../components/ui/Layout';
 import { Header } from '../../components/Header';
@@ -16,7 +17,7 @@ const ProductPage = () => {
   const id = Number(productId);
 
   // Check if id is valid before rendering the component that uses useSuspenseQuery
-  if (!id) {
+  if (isNaN(id) || id < 0) {
     return (
       <Layout>
         <Layout.Header>
@@ -35,11 +36,15 @@ const ProductPage = () => {
         <Header />
       </Layout.Header>
       <Layout.Main>
-        <ErrorBoundary>
-          <Suspense fallback={<p>Loading product...</p>}>
-            <ProductContent />
-          </Suspense>
-        </ErrorBoundary>
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset}>
+              <Suspense fallback={<p>Loading product...</p>}>
+                <ProductContent />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </Layout.Main>
     </Layout>
   );
