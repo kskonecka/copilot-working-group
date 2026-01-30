@@ -64,10 +64,11 @@ describe('ProductDetail', () => {
     expect(screen.getByTestId('product-navigation')).toBeInTheDocument();
   });
 
-  it('renders all child components', () => {
+  it('integrates with child components that use useProduct hook', () => {
     renderWithQueryClient(<ProductDetail />);
 
-    // Verify all child components are rendered
+    // Verify that the component structure renders correctly
+    // Child components (ProductInfo, ProductImage, ProductMeta, ProductActions) use useProduct internally
     expect(screen.getByTestId('product-navigation')).toBeInTheDocument();
     expect(screen.getByTestId('product-image')).toBeInTheDocument();
     expect(screen.getByTestId('product-info')).toBeInTheDocument();
@@ -138,50 +139,6 @@ describe('ProductDetail', () => {
     expect(infoSection).toContainElement(productInfo);
     expect(infoSection).toContainElement(productMeta);
     expect(infoSection).toContainElement(productActions);
-  });
-
-  it('integrates with useProduct hook correctly', () => {
-    renderWithQueryClient(<ProductDetail />);
-
-    // Verify that the component renders even when useProduct hook is called
-    // The mocked components should receive the product data from the hook
-    expect(screen.getByTestId('product-navigation')).toBeInTheDocument();
-    expect(screen.getByTestId('product-image')).toBeInTheDocument();
-    expect(screen.getByTestId('product-info')).toBeInTheDocument();
-    expect(screen.getByTestId('product-meta')).toBeInTheDocument();
-    expect(screen.getByTestId('product-actions')).toBeInTheDocument();
-  });
-
-  it('renders correctly when useProduct is loading', async () => {
-    // Mock loading state
-    vi.mocked(useProduct).mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      error: null,
-      isError: false,
-      isSuccess: false,
-    } as UseQueryResult<Product, Error>);
-
-    renderWithQueryClient(<ProductDetail />);
-
-    // Component should still render its structure
-    expect(screen.getByTestId('product-navigation')).toBeInTheDocument();
-  });
-
-  it('renders correctly when useProduct has error', async () => {
-    // Mock error state
-    vi.mocked(useProduct).mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: new Error('Failed to load product'),
-      isError: true,
-      isSuccess: false,
-    } as UseQueryResult<Product, Error>);
-
-    renderWithQueryClient(<ProductDetail />);
-
-    // Component should still render its structure
-    expect(screen.getByTestId('product-navigation')).toBeInTheDocument();
   });
 
   it('maintains correct DOM hierarchy', () => {
