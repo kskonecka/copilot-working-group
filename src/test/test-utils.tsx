@@ -1,10 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { ReactElement, ReactNode } from 'react';
+import { Suspense } from 'react';
 import { render } from '@testing-library/react';
 import type { RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, RouterProvider } from '@tanstack/react-router';
 import { CartProvider } from '../contexts/CartContext';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 // Create a wrapper for components that need QueryClient and CartProvider
 export function renderWithQueryClient(
@@ -23,7 +25,13 @@ export function renderWithQueryClient(
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          <ErrorBoundary>
+            <Suspense fallback={<div>Loading...</div>}>
+              {children}
+            </Suspense>
+          </ErrorBoundary>
+        </CartProvider>
       </QueryClientProvider>
     );
   }
@@ -56,7 +64,13 @@ export function renderWithRouter(
   const productRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/products/$productId',
-    component: () => ui,
+    component: () => (
+      <ErrorBoundary>
+        <Suspense fallback={<div>Loading...</div>}>
+          {ui}
+        </Suspense>
+      </ErrorBoundary>
+    ),
   });
 
   const routeTree = rootRoute.addChildren([productRoute]);
